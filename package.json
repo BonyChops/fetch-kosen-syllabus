@@ -31,7 +31,14 @@
     "test": "prettier --check bin/fetch-kosen-syllabus ./src && eslint bin/fetch-kosen-syllabus ./src",
     "prepublish": "prettier --write bin/fetch-kosen-syllabus ./src && eslint bin/fetch-kosen-syllabus ./src"
   },
+  "bin": {
+    "fetch-kosen-syllabus": "bin/fetch-kosen-syllabus"
+  },
   "author": "",
   "license": "MIT",
-  "description": ""
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BonyChops/fetch-kosen-syllabus.git"
+  }
 }
