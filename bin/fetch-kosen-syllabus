@@ -1,0 +1,185 @@
+#!/usr/bin/env node
+
+const { fetchSchoolList, promptSchoolList } = require('../src/school');
+const { getArgs, generateCommandLine } = require('../src/args');
+const { loadFunc } = require('../src/loading');
+const { fetchDepartmentSyllabus } = require('../src/syllabus');
+const { fetchYearList, promptYearList } = require('../src/year');
+const { syllabusUrl } = require('../src/syllabusUrl');
+const inquirer = require('inquirer');
+const { downloadAllSyllabusPDF, margeAllPdf } = require('../src/syllabusPdf');
+const { promptGradeList, getGradeList } = require('../src/grade');
+const {
+    fetchDepartmentList,
+    promptDepartmentList,
+} = require('../src/department');
+const {
+    getSubjectsFromSyllabus,
+    promptSubjectList,
+} = require('../src/subject');
+
+function onExitMessage(args) {
+    console.log('\n続きから実行するには，下記のコマンドを実行してください．\n');
+    console.log(`❯ ${generateCommandLine(args)}`);
+
+    process.exit();
+}
+
+(async () => {
+    let args = getArgs();
+    process.on('SIGINT', function () {
+        onExitMessage(args);
+    });
+
+    process.stdin.on('data', (key) => {
+        if (key == '\u0003') {
+            onExitMessage(args);
+        }
+    });
+
+    const schools = await loadFunc(
+        fetchSchoolList,
+        `${new URL(syllabusUrl).hostname}に接続しています...`
+    );
+    let school;
+    if (args.schoolId && schools.some((v) => v.id === args.schoolId)) {
+        school = schools.find((v) => v.id === args.schoolId);
+        console.log(`学校: ${school.name}(${school.id})`);
+    } else {
+        school = await promptSchoolList(schools);
+        args['school-id'] = school.id;
+    }
+
+    const departments = await loadFunc(
+        () => fetchDepartmentList(school.id),
+        `${new URL(syllabusUrl).hostname}に接続しています...`
+    );
+    let department;
+    if (
+        args.departmentId &&
+        departments.some((v) => v.id === args.departmentId)
+    ) {
+        department = departments.find((v) => v.id === args.departmentId);
+        console.log(`学科: ${department.name}(${department.id})`);
+    } else {
+        department = await promptDepartmentList(departments);
+        args['department-id'] = department.id;
+    }
+
+    const years = await loadFunc(
+        () => fetchYearList(school.id, department.id),
+        `${new URL(syllabusUrl).hostname}に接続しています...`
+    );
+    let year;
+    if (args.year && years.some((v) => v.id === args.year)) {
+        year = years.find((v) => v.id === args.year);
+        console.log(`年度: ${year.name}(${year.id})`);
+    } else {
+        year = await promptYearList(years);
+        args.year = year.id;
+    }
+
+    const syllabus = await loadFunc(
+        () => fetchDepartmentSyllabus(school.id, department.id, year.id),
+        `${new URL(syllabusUrl).hostname}に接続しています...`
+    );
+
+    const gradeCandidates = getGradeList(syllabus);
+    let grades;
+    if (
+        args.grades &&
+        args.grades.some((v) => gradeCandidates.map((v) => v.id).includes(v))
+    ) {
+        grades = gradeCandidates.filter((v) => args.grades.includes(v.id));
+        console.log(
+            `年度: ${grades
+                .map((v) => `${v.grade} ${v.semester}期 (${v.id})`)
+                .join(', ')}`
+        );
+    } else {
+        grades = await promptGradeList(gradeCandidates);
+        args.grades = grades.map((v) => v.id);
+    }
+
+    const subjectCandidates = getSubjectsFromSyllabus(syllabus).map((v) => ({
+        ...v,
+        checked: grades
+            .map((v) => v.id)
+            .some((grade) => v.grades.includes(grade)),
+    }));
+    let subjects;
+    if (
+        args.additionalSubjects?.length > 0 ||
+        args.excludeSubjects?.length > 0
+    ) {
+        if (args.additionalSubjects[0] === false) {
+            subjects = subjectCandidates.filter((v) => v.checked);
+        } else {
+            subjects = subjectCandidates.filter(
+                (v) =>
+                    (v.checked || args.additionalSubjects.includes(v.id)) &&
+                    !args.excludeSubjects.includes(v.id)
+            );
+        }
+        console.log(
+            `科目: ${subjects.map((v) => `${v.name}(${v.id})`).join(', ')}`
+        );
+    } else {
+        subjects = await promptSubjectList(subjectCandidates);
+        const additionalSubjects = subjects
+            .filter(
+                (v) => !subjectCandidates.find((vv) => vv.id === v.id).checked
+            )
+            .map((v) => v.id);
+        if (additionalSubjects.length > 0) {
+            args['additional-subjects'] = additionalSubjects;
+        } else {
+            args['additional-subjects'] = [false];
+        }
+        const excludeSubjects = subjectCandidates
+            .filter((v) => v.checked && !subjects.find((vv) => v.id === vv.id))
+            .map((v) => v.id);
+        if (excludeSubjects.length > 0) {
+            args['exclude-subjects'] = excludeSubjects;
+        }
+    }
+
+    let confirmed = !args.prompt;
+    if (args.prompt) {
+        confirmed = (
+            await inquirer.prompt({
+                type: 'confirm',
+                name: 'confirm',
+                message:
+                    '選択された内容でダウンロードを開始します．よろしいですか？',
+            })
+        ).confirm;
+    }
+
+    if (!confirmed) {
+        onExitMessage(args);
+    }
+
+    const { results: files, errors } = await downloadAllSyllabusPDF(
+        school.id,
+        department.id,
+        args.path,
+        subjects
+    );
+
+    await loadFunc(
+        () => margeAllPdf(files, args.path),
+        'PDFを結合しています...'
+    );
+
+    if (errors.length > 0) {
+        console.log('ダウンロード時にエラーが発生しました');
+        errors.forEach((e) => {
+            console.error(e);
+        });
+        onExitMessage(args);
+    }
+
+    console.log('完了．');
+    process.exit(0);
+})();
