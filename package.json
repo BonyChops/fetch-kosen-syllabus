@@ -25,7 +25,7 @@
     }
   },
   "name": "fetch-kosen-syllabus",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "bin/fetch-kosen-syllabus",
   "scripts": {
     "test": "prettier --check bin/fetch-kosen-syllabus ./src && eslint bin/fetch-kosen-syllabus ./src",
