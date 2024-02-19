@@ -41,7 +41,7 @@ async function promptYearList(departments) {
             {
                 type: 'list',
                 name: 'year',
-                message: '年度を選択（入学年度ではなくその学年の年度）',
+                message: '年度を選択（学年の年度）',
                 choices: departments.map((v) => ({
                     name: `${v.name}(${v.id})`,
                     value: v,
