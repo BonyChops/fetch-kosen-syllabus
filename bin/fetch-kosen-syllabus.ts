@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { fetchSchoolList, promptSchoolList } from '../src/school';
 import { getArgs, generateCommandLine } from '../src/args';
 import { loadFunc } from '../src/loading';
