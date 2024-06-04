@@ -14,10 +14,20 @@
     "yargs": "^17.7.1"
   },
   "devDependencies": {
+    "@types/cli-progress": "^3.11.5",
+    "@types/inquirer": "^9.0.7",
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^20.14.1",
+    "@types/shell-quote": "^1.7.5",
+    "@types/yargs": "^17.0.32",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.36.0",
     "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.3",
-    "prettier": "^2.8.7"
+    "prettier": "^2.8.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   },
   "husky": {
     "hooks": {
