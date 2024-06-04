@@ -1,24 +1,20 @@
 #!/usr/bin/env node
 
-const { fetchSchoolList, promptSchoolList } = require('../src/school');
-const { getArgs, generateCommandLine } = require('../src/args');
-const { loadFunc } = require('../src/loading');
-const { fetchDepartmentSyllabus } = require('../src/syllabus');
-const { fetchYearList, promptYearList } = require('../src/year');
-const { syllabusUrl } = require('../src/syllabusUrl');
-const inquirer = require('inquirer');
-const { downloadAllSyllabusPDF, margeAllPdf } = require('../src/syllabusPdf');
-const { promptGradeList, getGradeList } = require('../src/grade');
-const {
-    fetchDepartmentList,
-    promptDepartmentList,
-} = require('../src/department');
-const {
-    getSubjectsFromSyllabus,
-    promptSubjectList,
-} = require('../src/subject');
+import { fetchSchoolList, promptSchoolList } from '../src/school';
+import { getArgs, generateCommandLine } from '../src/args';
+import { loadFunc } from '../src/loading';
+import { fetchDepartmentSyllabus } from '../src/syllabus';
+import { fetchYearList, promptYearList } from '../src/year';
+import { syllabusUrl } from '../src/syllabusUrl';
+import inquirer from 'inquirer';
+import { downloadAllSyllabusPDF, margeAllPdf } from '../src/syllabusPdf';
+import { promptGradeList, getGradeList } from '../src/grade';
+import { Department, Grade, Subject } from '../src/types';
 
-function onExitMessage(args) {
+import { fetchDepartmentList, promptDepartmentList } from '../src/department';
+import { getSubjectsFromSyllabus, promptSubjectList } from '../src/subject';
+
+function onExitMessage(args: ReturnType<typeof getArgs>) {
     console.log('\n続きから実行するには，下記のコマンドを実行してください．\n');
     console.log(`❯ ${generateCommandLine(args)}`);
 
@@ -27,12 +23,12 @@ function onExitMessage(args) {
 
 (async () => {
     let args = getArgs();
-    process.on('SIGINT', function () {
+    process.on('SIGINT', function() {
         onExitMessage(args);
     });
 
     process.stdin.on('data', (key) => {
-        if (key == '\u0003') {
+        if (key.toString() == '\u0003') {
             onExitMessage(args);
         }
     });
@@ -41,42 +37,49 @@ function onExitMessage(args) {
         fetchSchoolList,
         `${new URL(syllabusUrl).hostname}に接続しています...`
     );
-    let school;
-    if (args.schoolId && schools.some((v) => v.id === args.schoolId)) {
-        school = schools.find((v) => v.id === args.schoolId);
+    let school = schools.find((v) => v.id === args.schoolId);
+    if (args.schoolId && school) {
         console.log(`学校: ${school.name}(${school.id})`);
     } else {
         school = await promptSchoolList(schools);
-        args['school-id'] = school.id;
+        args['school-id'] = school?.id ?? undefined;
+    }
+
+    if (!school) {
+        throw new Error('School not specified.');
     }
 
     const departments = await loadFunc(
-        () => fetchDepartmentList(school.id),
+        (): Promise<Department[]> => fetchDepartmentList(school.id),
         `${new URL(syllabusUrl).hostname}に接続しています...`
     );
-    let department;
-    if (
-        args.departmentId &&
-        departments.some((v) => v.id === args.departmentId)
-    ) {
-        department = departments.find((v) => v.id === args.departmentId);
+    let department = departments.find((v) => v.id === args.departmentId);
+    if (args.departmentId && department) {
         console.log(`学科: ${department.name}(${department.id})`);
     } else {
         department = await promptDepartmentList(departments);
-        args['department-id'] = department.id;
+        args['department-id'] = department?.id ?? undefined;
+    }
+
+    if (!department) {
+        throw new Error('Department not specified.');
     }
 
     const years = await loadFunc(
         () => fetchYearList(school.id, department.id),
         `${new URL(syllabusUrl).hostname}に接続しています...`
     );
-    let year;
-    if (args.year && years.some((v) => v.id === args.year)) {
-        year = years.find((v) => v.id === args.year);
+    let year = years.find((v) => v.id === args.year);
+
+    if (args.year && year) {
         console.log(`年度: ${year.name}(${year.id})`);
     } else {
         year = await promptYearList(years);
-        args.year = year.id;
+        args.year = year?.id ?? undefined;
+    }
+
+    if (!year) {
+        throw new Error('Year not specified.');
     }
 
     const syllabus = await loadFunc(
@@ -85,12 +88,12 @@ function onExitMessage(args) {
     );
 
     const gradeCandidates = getGradeList(syllabus);
-    let grades;
+    let grades: Grade[];
     if (
         args.grades &&
-        args.grades.some((v) => gradeCandidates.map((v) => v.id).includes(v))
+        args.grades.some((v) => gradeCandidates.map((v) => v.id).includes(String(v)))
     ) {
-        grades = gradeCandidates.filter((v) => args.grades.includes(v.id));
+        grades = gradeCandidates.filter((v) => args.grades?.includes(v.id));
         console.log(
             `年度: ${grades
                 .map((v) => `${v.grade} ${v.semester}期 (${v.id})`)
@@ -105,20 +108,19 @@ function onExitMessage(args) {
         ...v,
         checked: grades
             .map((v) => v.id)
-            .some((grade) => v.grades.includes(grade)),
+            .some((grade) => v.grades.includes(grade))
     }));
-    let subjects;
+    let subjects: Subject[];
     if (
-        args.additionalSubjects?.length > 0 ||
-        args.excludeSubjects?.length > 0
+        (args.additionalSubjects && args.additionalSubjects?.length > 0) || (args.excludeSubjects && args.excludeSubjects?.length > 0)
     ) {
-        if (args.additionalSubjects[0] === false) {
+        if (!args.additionalSubjects?.[0]) {
             subjects = subjectCandidates.filter((v) => v.checked);
         } else {
             subjects = subjectCandidates.filter(
                 (v) =>
-                    (v.checked || args.additionalSubjects.includes(v.id)) &&
-                    !args.excludeSubjects.includes(v.id)
+                    (v.checked || args.additionalSubjects?.includes(v.id)) &&
+                    !args.excludeSubjects?.includes(v.id)
             );
         }
         console.log(
@@ -128,13 +130,11 @@ function onExitMessage(args) {
         subjects = await promptSubjectList(subjectCandidates);
         const additionalSubjects = subjects
             .filter(
-                (v) => !subjectCandidates.find((vv) => vv.id === v.id).checked
+                (v) => !subjectCandidates?.find((vv) => vv?.id === v?.id)?.checked
             )
             .map((v) => v.id);
         if (additionalSubjects.length > 0) {
             args['additional-subjects'] = additionalSubjects;
-        } else {
-            args['additional-subjects'] = [false];
         }
         const excludeSubjects = subjectCandidates
             .filter((v) => v.checked && !subjects.find((vv) => v.id === vv.id))
@@ -151,7 +151,7 @@ function onExitMessage(args) {
                 type: 'confirm',
                 name: 'confirm',
                 message:
-                    '選択された内容でダウンロードを開始します．よろしいですか？',
+                    '選択された内容でダウンロードを開始します．よろしいですか？'
             })
         ).confirm;
     }
@@ -163,12 +163,12 @@ function onExitMessage(args) {
     const { results: files, errors } = await downloadAllSyllabusPDF(
         school.id,
         department.id,
-        args.path,
+        args.path as string,
         subjects
     );
 
     await loadFunc(
-        () => margeAllPdf(files, args.path),
+        () => margeAllPdf(files, args.path as string),
         'PDFを結合しています...'
     );
 

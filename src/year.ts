@@ -1,10 +1,10 @@
-const { publicSubjects } = require('./syllabusUrl');
-const axios = require('axios');
-const jsdom = require('jsdom');
-const { JSDOM } = jsdom;
-const inquirer = require('inquirer');
+import { publicSubjects } from './syllabusUrl';
+import axios from 'axios';
+import { JSDOM } from 'jsdom';
+import inquirer from 'inquirer';
+import { Department, Year } from './types';
 
-async function fetchYearList(schoolId, departmentId) {
+async function fetchYearList(schoolId: string, departmentId: string): Promise<Year[]> {
     const url = new URL(publicSubjects);
     const query = url.searchParams;
     query.set('school_id', schoolId);
@@ -19,23 +19,42 @@ async function fetchYearList(schoolId, departmentId) {
             (a) => a.href.indexOf('PublicSubjects') !== -1
         )
     );
+    if (!dropDownMenu) {
+        throw new Error('Failed to found dropdown menu.');
+    }
     const links = dropDownMenu.querySelectorAll('li');
 
     const years = [];
     for (const year of links) {
-        const link = year.querySelector('a').href;
+        const element = year.querySelector('a');
+        if (!element) {
+            continue;
+        }
+
+        const nameElement = year.querySelector('a');
+        if (!nameElement) {
+            continue;
+        }
+        const link = element.href;
+
+        const id = new URLSearchParams(link.substring(link.indexOf('?'))).get(
+            'year'
+        );
+
+        if (!id) {
+            continue;
+        }
+
         years.push({
-            id: new URLSearchParams(link.substring(link.indexOf('?'))).get(
-                'year'
-            ),
-            name: year.querySelector('a').innerHTML.trim(),
+            id,
+            name: nameElement.innerHTML.trim()
         });
     }
 
     return years;
 }
 
-async function promptYearList(departments) {
+async function promptYearList(departments: Department[]) {
     return (
         await inquirer.prompt([
             {
@@ -44,14 +63,14 @@ async function promptYearList(departments) {
                 message: '年度を選択（学年の年度）',
                 choices: departments.map((v) => ({
                     name: `${v.name}(${v.id})`,
-                    value: v,
-                })),
-            },
+                    value: v
+                }))
+            }
         ])
     ).year;
 }
 
-module.exports = {
+export {
     fetchYearList,
-    promptYearList,
+    promptYearList
 };

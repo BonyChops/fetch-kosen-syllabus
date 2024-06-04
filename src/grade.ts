@@ -1,22 +1,22 @@
-const inquirer = require('inquirer');
+import inquirer from 'inquirer';
+import { Grade, Syllabus } from './types';
 
-function getGradeList(syllabus) {
-    const gradeCols = [];
+function getGradeList(syllabus: Syllabus): Grade[] {
+    const gradeCols: number[] = [];
     syllabus[0].forEach((element, i) => {
         if (element === '学年別週当授業時数') {
             gradeCols.push(i);
         }
     });
-    const grades = gradeCols.map((v) => ({
+    return gradeCols.map((v) => ({
         grade: syllabus[1][v],
         semester: syllabus[2][v],
         quoter: syllabus[3][v],
-        id: generateGradeId(syllabus, v),
+        id: generateGradeId(syllabus, v)
     }));
-    return grades;
 }
 
-async function promptGradeList(grades) {
+async function promptGradeList(grades: Grade[]) {
     return (
         await inquirer.prompt([
             {
@@ -25,7 +25,7 @@ async function promptGradeList(grades) {
                 message: '学年, 学期を選択',
                 choices: grades.map((v) => ({
                     name: `${v.grade} ${v.semester}期 (${v.id})`,
-                    value: v,
+                    value: v
                 })),
                 validate(value) {
                     if (value.length <= 0) {
@@ -33,17 +33,17 @@ async function promptGradeList(grades) {
                     }
 
                     return true;
-                },
-            },
+                }
+            }
         ])
     ).grades;
 }
 
-function generateGradeId(syllabus, colNum) {
+function generateGradeId(syllabus: Syllabus, colNum: number) {
     return `${syllabus[1][colNum].substring(
         0,
         syllabus[1][colNum].length - 1
     )}-${syllabus[3][colNum]}`;
 }
 
-module.exports = { getGradeList, promptGradeList, generateGradeId };
+export { getGradeList, promptGradeList, generateGradeId };

@@ -1,11 +1,11 @@
-const { publicSubjects } = require('./syllabusUrl');
-const axios = require('axios');
-const jsdom = require('jsdom');
-const { JSDOM } = jsdom;
-const cheerio = require('cheerio');
-const cheerioTableparser = require('cheerio-tableparser');
+import { publicSubjects } from './syllabusUrl';
+import axios from 'axios';
+import { JSDOM } from 'jsdom';
+import { load } from 'cheerio';
+import cheerioTableparser from 'cheerio-tableparser';
+import { Syllabus } from './types';
 
-async function fetchDepartmentSyllabus(schoolId, departmentId, year) {
+async function fetchDepartmentSyllabus(schoolId: string, departmentId: string, year: string): Promise<Syllabus> {
     const url = new URL(publicSubjects);
     const query = url.searchParams;
     query.set('school_id', schoolId);
@@ -17,25 +17,28 @@ async function fetchDepartmentSyllabus(schoolId, departmentId, year) {
     const syllabysTableDom =
         dom.window.document.querySelector('table#sytablenc');
 
+    if (!syllabysTableDom) {
+        throw new Error('Failed to get syllabys table');
+    }
+
     syllabysTableDom.querySelectorAll('tr').forEach((tr) => {
         tr.querySelectorAll('td[style*="display:none"]').forEach((td) => {
             tr.removeChild(td);
         });
     });
 
-    const cheerioDom = cheerio.load(syllabysTableDom.outerHTML);
+    const cheerioDom = load(syllabysTableDom.outerHTML);
     cheerioTableparser(cheerioDom);
 
-    const syllabysTableTransposed = cheerioDom('table').parsetable(
+    const syllabysTableTransposed = (cheerioDom('table') as any).parsetable(
         true,
         true,
         false
-    );
-    const syllabysTable = syllabysTableTransposed[0].map((col, i) =>
+    ) as string[][];
+
+    return syllabysTableTransposed[0].map((col, i) =>
         syllabysTableTransposed.map((row) => row[i])
     );
-
-    return syllabysTable;
 }
 
-module.exports = { fetchDepartmentSyllabus };
+export { fetchDepartmentSyllabus };
