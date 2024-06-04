@@ -39,10 +39,11 @@
   "main": "bin/fetch-kosen-syllabus",
   "scripts": {
     "test": "prettier --check bin/fetch-kosen-syllabus ./src && eslint bin/fetch-kosen-syllabus ./src",
-    "prepublish": "prettier --write bin/fetch-kosen-syllabus ./src && eslint bin/fetch-kosen-syllabus ./src"
+    "build": "tsc",
+    "prepublish": "prettier --write bin/fetch-kosen-syllabus ./src && eslint bin/fetch-kosen-syllabus ./src & npm run build"
   },
   "bin": {
-    "fetch-kosen-syllabus": "bin/fetch-kosen-syllabus"
+    "fetch-kosen-syllabus": "dist/bin/fetch-kosen-syllabus.js"
   },
   "author": "",
   "license": "MIT",
