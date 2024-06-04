@@ -1,17 +1,18 @@
-const { PromisePool } = require('@supercharge/promise-pool');
-const axios = require('axios');
-const path = require('path');
-const { syllabusPdf } = require('./syllabusUrl');
-const cliProgress = require('cli-progress');
-const colors = require('ansi-colors');
-const fs = require('fs');
-const PDFMerger = require('pdf-merger-js');
-const moment = require('moment');
+import { PromisePool } from '@supercharge/promise-pool';
+import axios from 'axios';
+import path from 'path';
+import { syllabusPdf } from './syllabusUrl';
+import cliProgress from 'cli-progress';
+import colors from 'ansi-colors';
+import fs from 'fs';
+import PDFMerger from 'pdf-merger-js';
+import moment from 'moment';
+import { Subject } from './types';
 
-function getFileName(contentDisposition) {
+function getFileName(contentDisposition: string) {
     let fileName = contentDisposition.substring(
         // eslint-disable-next-line quotes
-        contentDisposition.indexOf("''") + 2,
+        contentDisposition.indexOf('\'\'') + 2,
         contentDisposition.length
     );
     fileName = decodeURI(fileName).replace(/\+/g, ' ');
@@ -20,12 +21,12 @@ function getFileName(contentDisposition) {
 }
 
 async function downloadAllSyllabusPDF(
-    schoolId,
-    departmentId,
-    dirPath,
-    subjects
+    schoolId: string,
+    departmentId: string,
+    dirPath: string,
+    subjects: Subject[]
 ) {
-    async function fetchAndSavePDF(subjectId, actualYear) {
+    async function fetchAndSavePDF(subjectId: string, actualYear: string) {
         const url = new URL(syllabusPdf);
         const query = url.searchParams;
         query.set('school_id', schoolId);
@@ -35,11 +36,11 @@ async function downloadAllSyllabusPDF(
         query.set('preview', 'False');
         query.set('attachment', 'true');
         const response = await axios.get(url.toString(), {
-            responseType: 'arraybuffer',
+            responseType: 'arraybuffer'
         });
         const buffer = Buffer.from(response.data, 'binary');
 
-        const contentDisposition = response.headers['content-disposition'];
+        const contentDisposition = response.headers['content-disposition'] as string;
         const fileName = getFileName(contentDisposition);
 
         const filepath = path.join(dirPath, fileName);
@@ -54,10 +55,10 @@ async function downloadAllSyllabusPDF(
             '| {percentage}% || {value}/{total} 完了',
         barCompleteChar: '\u2588',
         barIncompleteChar: '\u2591',
-        hideCursor: true,
+        hideCursor: true
     });
     bar.start(subjects.length, 0, {
-        speed: 'N/A',
+        speed: 'N/A'
     });
     const { results, errors } = await PromisePool.for(subjects).process(
         async (subject) => {
@@ -70,10 +71,10 @@ async function downloadAllSyllabusPDF(
     return { results, errors };
 }
 
-async function margeAllPdf(files, dirPath) {
+async function margeAllPdf(filePaths: string[], dirPath: string) {
     const merger = new PDFMerger();
 
-    for (const file of files) {
+    for (const file of filePaths) {
         await merger.add(file);
     }
 
@@ -86,4 +87,4 @@ async function margeAllPdf(files, dirPath) {
     await merger.save(filepath);
 }
 
-module.exports = { downloadAllSyllabusPDF, margeAllPdf };
+export { downloadAllSyllabusPDF, margeAllPdf };

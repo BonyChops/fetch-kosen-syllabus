@@ -4,10 +4,10 @@ const publicDepartmentsUrls = `${syllabusUrl}/PublicDepartments`;
 const publicSubjects = `${syllabusUrl}/PublicSubjects`;
 const syllabusPdf = `${syllabusUrl}/SyllabusPDF`;
 
-module.exports = {
+export {
     syllabusUrl,
     publicSchoolsUrl,
     publicDepartmentsUrls,
     publicSubjects,
-    syllabusPdf,
+    syllabusPdf
 };

@@ -1,11 +1,12 @@
-const { generateGradeId } = require('./grade');
-const jsdom = require('jsdom');
-const { JSDOM } = jsdom;
-const inquirer = require('inquirer');
+import { generateGradeId } from './grade';
+import { JSDOM } from 'jsdom';
+import inquirer from 'inquirer';
+import { Subject, Syllabus } from './types';
 
-function getSubjectsFromSyllabus(syllabus) {
+function getSubjectsFromSyllabus(syllabus: Syllabus): Subject[] {
     const subjectRows = syllabus.slice(4);
-    const subjects = subjectRows.map((row) => {
+
+    return subjectRows.map((row) => {
         const grades = [];
         for (let i = 6; i <= 25; i++) {
             if (row[i] !== '') {
@@ -16,6 +17,11 @@ function getSubjectsFromSyllabus(syllabus) {
         const document = dom.window.document;
 
         const a = document.querySelector('a');
+
+        if (!a) {
+            return null;
+        }
+
         const linkParams = new URLSearchParams(
             a.href.substring(a.href.indexOf('?'))
         );
@@ -24,13 +30,12 @@ function getSubjectsFromSyllabus(syllabus) {
             name: a.innerHTML,
             id: linkParams.get('subject_id'),
             actualYear: linkParams.get('year'),
-            grades,
+            grades
         };
-    });
-    return subjects;
+    }).filter(v => v !== null) as Subject[];
 }
 
-async function promptSubjectList(subjects) {
+async function promptSubjectList(subjects: (Subject & { checked?: boolean })[]) {
     return (
         await inquirer.prompt([
             {
@@ -41,7 +46,7 @@ async function promptSubjectList(subjects) {
                 choices: subjects.map((v) => ({
                     name: `${v.name} (${v.id})`,
                     value: v,
-                    checked: v.checked,
+                    checked: v.checked
                 })),
                 validate(value) {
                     if (value.length <= 0) {
@@ -49,10 +54,12 @@ async function promptSubjectList(subjects) {
                     }
 
                     return true;
-                },
-            },
+                }
+            }
         ])
     ).subject;
 }
 
-module.exports = { getSubjectsFromSyllabus, promptSubjectList };
+export {
+    getSubjectsFromSyllabus, promptSubjectList
+};
