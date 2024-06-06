@@ -5,7 +5,11 @@ import { load } from 'cheerio';
 import cheerioTableparser from 'cheerio-tableparser';
 import { Syllabus } from './types';
 
-async function fetchDepartmentSyllabus(schoolId: string, departmentId: string, year: string): Promise<Syllabus> {
+async function fetchDepartmentSyllabus(
+    schoolId: string,
+    departmentId: string,
+    year: string,
+): Promise<Syllabus> {
     const url = new URL(publicSubjects);
     const query = url.searchParams;
     query.set('school_id', schoolId);
@@ -33,11 +37,11 @@ async function fetchDepartmentSyllabus(schoolId: string, departmentId: string, y
     const syllabysTableTransposed = (cheerioDom('table') as any).parsetable(
         true,
         true,
-        false
+        false,
     ) as string[][];
 
     return syllabysTableTransposed[0].map((col, i) =>
-        syllabysTableTransposed.map((row) => row[i])
+        syllabysTableTransposed.map((row) => row[i]),
     );
 }
 

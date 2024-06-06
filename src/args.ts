@@ -11,43 +11,43 @@ function getArgs() {
                 return yargs.positional('path', {
                     describe: 'ダウンロード先のディレクトリパス',
                     default: process.cwd(),
-                    type: 'string'
+                    type: 'string',
                 });
-            }
+            },
         )
         .option('school-id', {
             describe: '学校ID',
-            type: 'string'
+            type: 'string',
         })
         .option('department-id', {
             describe: '学科ID',
-            type: 'string'
+            type: 'string',
         })
         .option('year', {
             describe: '年度',
-            type: 'string'
+            type: 'string',
         })
         .option('grades', {
             describe: '学年',
-            type: 'array'
+            type: 'array',
         })
         .option('additional-subjects', {
             describe: '追加する科目ID',
-            type: 'array'
+            type: 'array',
         })
         .option('exclude-subjects', {
             describe: '除外する科目ID',
-            type: 'array'
+            type: 'array',
         })
         .option('marge', {
             default: true,
             describe: 'ダウンロード完了時にPDFをマージする',
-            type: 'boolean'
+            type: 'boolean',
         })
         .option('prompt', {
             default: true,
             describe: '最終確認をする',
-            type: 'boolean'
+            type: 'boolean',
         })
         .parseSync();
 }
@@ -59,14 +59,18 @@ type UOrUndefinedProps<T, U> = {
 function generateCommandLine(args: ReturnType<typeof getArgs>) {
     const strings = ['npx', 'fetch-kosen-syllabus'];
 
-    function addFromKeys(key: keyof UOrUndefinedProps<typeof args, string | number>) {
+    function addFromKeys(
+        key: keyof UOrUndefinedProps<typeof args, string | number>,
+    ) {
         if (args[key]) {
             strings.push(`--${key}`);
             strings.push(String(args[key]));
         }
     }
 
-    function addArrayFromKeys(key: keyof UOrUndefinedProps<typeof args, (string | number)[]>) {
+    function addArrayFromKeys(
+        key: keyof UOrUndefinedProps<typeof args, (string | number)[]>,
+    ) {
         const t = args[key];
         if (t) {
             strings.push(`--${key}`);

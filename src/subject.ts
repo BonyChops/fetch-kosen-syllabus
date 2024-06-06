@@ -6,36 +6,40 @@ import { Subject, Syllabus } from './types';
 function getSubjectsFromSyllabus(syllabus: Syllabus): Subject[] {
     const subjectRows = syllabus.slice(4);
 
-    return subjectRows.map((row) => {
-        const grades = [];
-        for (let i = 6; i <= 25; i++) {
-            if (row[i] !== '') {
-                grades.push(generateGradeId(syllabus, i));
+    return subjectRows
+        .map((row) => {
+            const grades = [];
+            for (let i = 6; i <= 25; i++) {
+                if (row[i] !== '') {
+                    grades.push(generateGradeId(syllabus, i));
+                }
             }
-        }
-        const dom = new JSDOM(row[2]);
-        const document = dom.window.document;
+            const dom = new JSDOM(row[2]);
+            const document = dom.window.document;
 
-        const a = document.querySelector('a');
+            const a = document.querySelector('a');
 
-        if (!a) {
-            return null;
-        }
+            if (!a) {
+                return null;
+            }
 
-        const linkParams = new URLSearchParams(
-            a.href.substring(a.href.indexOf('?'))
-        );
+            const linkParams = new URLSearchParams(
+                a.href.substring(a.href.indexOf('?')),
+            );
 
-        return {
-            name: a.innerHTML,
-            id: linkParams.get('subject_id'),
-            actualYear: linkParams.get('year'),
-            grades
-        };
-    }).filter(v => v !== null) as Subject[];
+            return {
+                name: a.innerHTML,
+                id: linkParams.get('subject_id'),
+                actualYear: linkParams.get('year'),
+                grades,
+            };
+        })
+        .filter((v) => v !== null) as Subject[];
 }
 
-async function promptSubjectList(subjects: (Subject & { checked?: boolean })[]) {
+async function promptSubjectList(
+    subjects: (Subject & { checked?: boolean })[],
+) {
     return (
         await inquirer.prompt([
             {
@@ -46,7 +50,7 @@ async function promptSubjectList(subjects: (Subject & { checked?: boolean })[]) 
                 choices: subjects.map((v) => ({
                     name: `${v.name} (${v.id})`,
                     value: v,
-                    checked: v.checked
+                    checked: v.checked,
                 })),
                 validate(value) {
                     if (value.length <= 0) {
@@ -54,12 +58,10 @@ async function promptSubjectList(subjects: (Subject & { checked?: boolean })[]) 
                     }
 
                     return true;
-                }
-            }
+                },
+            },
         ])
     ).subject;
 }
 
-export {
-    getSubjectsFromSyllabus, promptSubjectList
-};
+export { getSubjectsFromSyllabus, promptSubjectList };

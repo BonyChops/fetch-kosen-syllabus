@@ -9,5 +9,5 @@ export {
     publicSchoolsUrl,
     publicDepartmentsUrls,
     publicSubjects,
-    syllabusPdf
+    syllabusPdf,
 };
