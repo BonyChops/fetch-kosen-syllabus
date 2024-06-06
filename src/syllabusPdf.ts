@@ -6,7 +6,7 @@ import cliProgress from 'cli-progress';
 import colors from 'ansi-colors';
 import fs from 'fs';
 import PDFMerger from 'pdf-merger-js';
-import moment from 'moment';
+import dayjs from 'dayjs';
 import { Subject } from './types';
 
 function getFileName(contentDisposition: string) {
@@ -82,7 +82,7 @@ async function margeAllPdf(filePaths: string[], dirPath: string) {
 
     const filepath = path.join(
         dirPath,
-        `marged-syllabus-${moment(new Date()).format(
+        `marged-syllabus-${dayjs(new Date()).format(
             'YYYY-MM-DD-hh-mm-ss',
         )}.pdf`,
     );
