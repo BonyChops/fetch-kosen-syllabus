@@ -38,9 +38,12 @@
   "version": "1.1.0",
   "main": "bin/fetch-kosen-syllabus",
   "scripts": {
-    "test": "prettier --check bin/fetch-kosen-syllabus ./src && eslint bin/fetch-kosen-syllabus ./src",
+    "test": "npm run format:check && npm run lint",
     "build": "tsc",
-    "prepublish": "prettier --write bin/fetch-kosen-syllabus ./src && eslint bin/fetch-kosen-syllabus ./src & npm run build"
+    "prepublish": "npm run format:fix && npm run lint & npm run build",
+    "format:check": "prettier --check ./bin ./src",
+    "format:fix": "prettier --write ./bin ./src",
+    "lint": "eslint ./bin ./src"
   },
   "bin": {
     "fetch-kosen-syllabus": "dist/bin/fetch-kosen-syllabus.js"

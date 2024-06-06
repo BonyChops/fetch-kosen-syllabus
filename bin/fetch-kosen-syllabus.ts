@@ -23,7 +23,7 @@ function onExitMessage(args: ReturnType<typeof getArgs>) {
 
 (async () => {
     let args = getArgs();
-    process.on('SIGINT', function() {
+    process.on('SIGINT', function () {
         onExitMessage(args);
     });
 
@@ -35,7 +35,7 @@ function onExitMessage(args: ReturnType<typeof getArgs>) {
 
     const schools = await loadFunc(
         fetchSchoolList,
-        `${new URL(syllabusUrl).hostname}に接続しています...`
+        `${new URL(syllabusUrl).hostname}に接続しています...`,
     );
     let school = schools.find((v) => v.id === args.schoolId);
     if (args.schoolId && school) {
@@ -51,7 +51,7 @@ function onExitMessage(args: ReturnType<typeof getArgs>) {
 
     const departments = await loadFunc(
         (): Promise<Department[]> => fetchDepartmentList(school.id),
-        `${new URL(syllabusUrl).hostname}に接続しています...`
+        `${new URL(syllabusUrl).hostname}に接続しています...`,
     );
     let department = departments.find((v) => v.id === args.departmentId);
     if (args.departmentId && department) {
@@ -67,7 +67,7 @@ function onExitMessage(args: ReturnType<typeof getArgs>) {
 
     const years = await loadFunc(
         () => fetchYearList(school.id, department.id),
-        `${new URL(syllabusUrl).hostname}に接続しています...`
+        `${new URL(syllabusUrl).hostname}に接続しています...`,
     );
     let year = years.find((v) => v.id === args.year);
 
@@ -84,20 +84,22 @@ function onExitMessage(args: ReturnType<typeof getArgs>) {
 
     const syllabus = await loadFunc(
         () => fetchDepartmentSyllabus(school.id, department.id, year.id),
-        `${new URL(syllabusUrl).hostname}に接続しています...`
+        `${new URL(syllabusUrl).hostname}に接続しています...`,
     );
 
     const gradeCandidates = getGradeList(syllabus);
     let grades: Grade[];
     if (
         args.grades &&
-        args.grades.some((v) => gradeCandidates.map((v) => v.id).includes(String(v)))
+        args.grades.some((v) =>
+            gradeCandidates.map((v) => v.id).includes(String(v)),
+        )
     ) {
         grades = gradeCandidates.filter((v) => args.grades?.includes(v.id));
         console.log(
             `年度: ${grades
                 .map((v) => `${v.grade} ${v.semester}期 (${v.id})`)
-                .join(', ')}`
+                .join(', ')}`,
         );
     } else {
         grades = await promptGradeList(gradeCandidates);
@@ -108,11 +110,12 @@ function onExitMessage(args: ReturnType<typeof getArgs>) {
         ...v,
         checked: grades
             .map((v) => v.id)
-            .some((grade) => v.grades.includes(grade))
+            .some((grade) => v.grades.includes(grade)),
     }));
     let subjects: Subject[];
     if (
-        (args.additionalSubjects && args.additionalSubjects?.length > 0) || (args.excludeSubjects && args.excludeSubjects?.length > 0)
+        (args.additionalSubjects && args.additionalSubjects?.length > 0) ||
+        (args.excludeSubjects && args.excludeSubjects?.length > 0)
     ) {
         if (!args.additionalSubjects?.[0]) {
             subjects = subjectCandidates.filter((v) => v.checked);
@@ -120,17 +123,18 @@ function onExitMessage(args: ReturnType<typeof getArgs>) {
             subjects = subjectCandidates.filter(
                 (v) =>
                     (v.checked || args.additionalSubjects?.includes(v.id)) &&
-                    !args.excludeSubjects?.includes(v.id)
+                    !args.excludeSubjects?.includes(v.id),
             );
         }
         console.log(
-            `科目: ${subjects.map((v) => `${v.name}(${v.id})`).join(', ')}`
+            `科目: ${subjects.map((v) => `${v.name}(${v.id})`).join(', ')}`,
         );
     } else {
         subjects = await promptSubjectList(subjectCandidates);
         const additionalSubjects = subjects
             .filter(
-                (v) => !subjectCandidates?.find((vv) => vv?.id === v?.id)?.checked
+                (v) =>
+                    !subjectCandidates?.find((vv) => vv?.id === v?.id)?.checked,
             )
             .map((v) => v.id);
         if (additionalSubjects.length > 0) {
@@ -151,7 +155,7 @@ function onExitMessage(args: ReturnType<typeof getArgs>) {
                 type: 'confirm',
                 name: 'confirm',
                 message:
-                    '選択された内容でダウンロードを開始します．よろしいですか？'
+                    '選択された内容でダウンロードを開始します．よろしいですか？',
             })
         ).confirm;
     }
@@ -164,12 +168,12 @@ function onExitMessage(args: ReturnType<typeof getArgs>) {
         school.id,
         department.id,
         args.path as string,
-        subjects
+        subjects,
     );
 
     await loadFunc(
         () => margeAllPdf(files, args.path as string),
-        'PDFを結合しています...'
+        'PDFを結合しています...',
     );
 
     if (errors.length > 0) {
