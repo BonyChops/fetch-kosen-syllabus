@@ -12,8 +12,8 @@ import { Subject } from './types';
 function getFileName(contentDisposition: string) {
     let fileName = contentDisposition.substring(
         // eslint-disable-next-line quotes
-        contentDisposition.indexOf('\'\'') + 2,
-        contentDisposition.length
+        contentDisposition.indexOf("''") + 2,
+        contentDisposition.length,
     );
     fileName = decodeURI(fileName).replace(/\+/g, ' ');
 
@@ -24,7 +24,7 @@ async function downloadAllSyllabusPDF(
     schoolId: string,
     departmentId: string,
     dirPath: string,
-    subjects: Subject[]
+    subjects: Subject[],
 ) {
     async function fetchAndSavePDF(subjectId: string, actualYear: string) {
         const url = new URL(syllabusPdf);
@@ -36,11 +36,13 @@ async function downloadAllSyllabusPDF(
         query.set('preview', 'False');
         query.set('attachment', 'true');
         const response = await axios.get(url.toString(), {
-            responseType: 'arraybuffer'
+            responseType: 'arraybuffer',
         });
         const buffer = Buffer.from(response.data, 'binary');
 
-        const contentDisposition = response.headers['content-disposition'] as string;
+        const contentDisposition = response.headers[
+            'content-disposition'
+        ] as string;
         const fileName = getFileName(contentDisposition);
 
         const filepath = path.join(dirPath, fileName);
@@ -55,17 +57,17 @@ async function downloadAllSyllabusPDF(
             '| {percentage}% || {value}/{total} 完了',
         barCompleteChar: '\u2588',
         barIncompleteChar: '\u2591',
-        hideCursor: true
+        hideCursor: true,
     });
     bar.start(subjects.length, 0, {
-        speed: 'N/A'
+        speed: 'N/A',
     });
     const { results, errors } = await PromisePool.for(subjects).process(
         async (subject) => {
             const r = await fetchAndSavePDF(subject.id, subject.actualYear);
             bar.increment();
             return r;
-        }
+        },
     );
     bar.stop();
     return { results, errors };
@@ -81,8 +83,8 @@ async function margeAllPdf(filePaths: string[], dirPath: string) {
     const filepath = path.join(
         dirPath,
         `marged-syllabus-${moment(new Date()).format(
-            'YYYY-MM-DD-hh-mm-ss'
-        )}.pdf`
+            'YYYY-MM-DD-hh-mm-ss',
+        )}.pdf`,
     );
     await merger.save(filepath);
 }

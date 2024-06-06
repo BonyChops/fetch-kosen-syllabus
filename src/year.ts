@@ -4,7 +4,10 @@ import { JSDOM } from 'jsdom';
 import inquirer from 'inquirer';
 import { Department, Year } from './types';
 
-async function fetchYearList(schoolId: string, departmentId: string): Promise<Year[]> {
+async function fetchYearList(
+    schoolId: string,
+    departmentId: string,
+): Promise<Year[]> {
     const url = new URL(publicSubjects);
     const query = url.searchParams;
     query.set('school_id', schoolId);
@@ -16,8 +19,8 @@ async function fetchYearList(schoolId: string, departmentId: string): Promise<Ye
         dom.window.document.querySelectorAll('ul.dropdown-menu');
     const dropDownMenu = [...dropDownMenuCandidates].find((ul) =>
         [...ul.querySelectorAll('a')].some(
-            (a) => a.href.indexOf('PublicSubjects') !== -1
-        )
+            (a) => a.href.indexOf('PublicSubjects') !== -1,
+        ),
     );
     if (!dropDownMenu) {
         throw new Error('Failed to found dropdown menu.');
@@ -38,7 +41,7 @@ async function fetchYearList(schoolId: string, departmentId: string): Promise<Ye
         const link = element.href;
 
         const id = new URLSearchParams(link.substring(link.indexOf('?'))).get(
-            'year'
+            'year',
         );
 
         if (!id) {
@@ -47,7 +50,7 @@ async function fetchYearList(schoolId: string, departmentId: string): Promise<Ye
 
         years.push({
             id,
-            name: nameElement.innerHTML.trim()
+            name: nameElement.innerHTML.trim(),
         });
     }
 
@@ -63,14 +66,11 @@ async function promptYearList(departments: Department[]) {
                 message: '年度を選択（学年の年度）',
                 choices: departments.map((v) => ({
                     name: `${v.name}(${v.id})`,
-                    value: v
-                }))
-            }
+                    value: v,
+                })),
+            },
         ])
     ).year;
 }
 
-export {
-    fetchYearList,
-    promptYearList
-};
+export { fetchYearList, promptYearList };

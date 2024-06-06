@@ -12,7 +12,7 @@ function getGradeList(syllabus: Syllabus): Grade[] {
         grade: syllabus[1][v],
         semester: syllabus[2][v],
         quoter: syllabus[3][v],
-        id: generateGradeId(syllabus, v)
+        id: generateGradeId(syllabus, v),
     }));
 }
 
@@ -25,7 +25,7 @@ async function promptGradeList(grades: Grade[]) {
                 message: '学年, 学期を選択',
                 choices: grades.map((v) => ({
                     name: `${v.grade} ${v.semester}期 (${v.id})`,
-                    value: v
+                    value: v,
                 })),
                 validate(value) {
                     if (value.length <= 0) {
@@ -33,8 +33,8 @@ async function promptGradeList(grades: Grade[]) {
                     }
 
                     return true;
-                }
-            }
+                },
+            },
         ])
     ).grades;
 }
@@ -42,7 +42,7 @@ async function promptGradeList(grades: Grade[]) {
 function generateGradeId(syllabus: Syllabus, colNum: number) {
     return `${syllabus[1][colNum].substring(
         0,
-        syllabus[1][colNum].length - 1
+        syllabus[1][colNum].length - 1,
     )}-${syllabus[3][colNum]}`;
 }
 

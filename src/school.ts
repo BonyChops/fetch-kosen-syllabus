@@ -10,7 +10,7 @@ async function fetchSchoolList(): Promise<School[]> {
     const { HTMLAnchorElement } = dom.window;
 
     const schoolList = dom.window.document.querySelectorAll(
-        'table.school_table a.link_button.btn.btn-default'
+        'table.school_table a.link_button.btn.btn-default',
     );
     const schools = [];
     for (const school of schoolList) {
@@ -19,7 +19,7 @@ async function fetchSchoolList(): Promise<School[]> {
         }
 
         const id = new URLSearchParams(
-            school.href.substring(school.href.indexOf('?'))
+            school.href.substring(school.href.indexOf('?')),
         ).get('school_id');
 
         if (!id) {
@@ -28,7 +28,7 @@ async function fetchSchoolList(): Promise<School[]> {
 
         schools.push({
             id,
-            name: school.innerHTML
+            name: school.innerHTML,
         });
     }
 
@@ -44,9 +44,9 @@ async function promptSchoolList(schools: School[]) {
                 message: '学校を選択',
                 choices: schools.map((v) => ({
                     name: `${v.name}(${v.id})`,
-                    value: v
-                }))
-            }
+                    value: v,
+                })),
+            },
         ])
     ).school;
 }
