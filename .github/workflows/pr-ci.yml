@@ -3,6 +3,5 @@ on:
   pull_request:
 
 jobs:
-  # 共通CIワークフローを呼び出すよ！
   ci:
     uses: ./.github/workflows/ci.yml
