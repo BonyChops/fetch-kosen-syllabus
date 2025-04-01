@@ -1,0 +1,8 @@
+tsconfig.json
+mise.toml
+.prettierrc
+.eslintrc.json
+src/
+bin/
+.vscode/
+.github/

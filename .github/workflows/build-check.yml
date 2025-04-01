@@ -1,0 +1,51 @@
+name: CI
+on:
+  workflow_call:  # 他のワークフローから呼び出せるようにする
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        runtime: ['node', 'bun']
+        include:
+          - runtime: 'node'
+            setup: 'actions/setup-node@v4'
+            version: '20.x'
+          - runtime: 'bun'
+            setup: 'oven-sh/setup-bun@v1'
+            version: 'latest'
+    steps:
+      - uses: actions/checkout@v4
+      # Setup runtime environment (Node.js or Bun)
+
+      - name: Setup Node.js
+        if: matrix.runtime == 'node'
+        uses: actions/setup-node@v4
+        with:
+          version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup Bun
+        if: matrix.runtime == 'bun'
+        uses: oven-sh/setup-bun@v1
+        with:
+          version: 'latest'
+
+      
+      # Install dependencies and build
+      - name: Install with npm
+        if: matrix.runtime == 'node'
+        run: npm ci
+      - name: Install with bun
+        if: matrix.runtime == 'bun'
+        run: bun install
+      # Build step
+      - name: Build with npm
+        if: matrix.runtime == 'node'
+        run: npm run build
+      - name: Build with bun
+        if: matrix.runtime == 'bun'
+        run: bun run build
