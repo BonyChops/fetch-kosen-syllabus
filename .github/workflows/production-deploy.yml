@@ -4,12 +4,12 @@ on:
     types: [published]
 jobs:
   # まずは共通CIワークフローを呼び出す！
-  ci:
-    uses: ./.github/workflows/ci.yml
+  build-check:
+    uses: ./.github/workflows/build-check.yml
 
   # CIが終わったらnpmにパブリッシュするよ！
   publish:
-    needs: ci # CIが成功した後に実行
+    needs: build-check # CIが成功した後に実行
     runs-on: ubuntu-latest
     permissions:
       contents: read
