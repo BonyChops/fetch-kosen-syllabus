@@ -1,7 +1,7 @@
 name: CI
 on:
   workflow_call:  # 他のワークフローから呼び出せるようにする
-  pull_request:
+
 jobs:
   build:
     runs-on: ubuntu-latest
