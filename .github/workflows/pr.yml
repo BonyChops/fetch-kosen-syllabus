@@ -4,4 +4,4 @@ on:
 
 jobs:
   ci:
-    uses: ./.github/workflows/ci.yml
+    uses: ./.github/workflows/build-check.yml
