@@ -7,7 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
     strategy:
       matrix:
         runtime: ['node', 'bun']
