@@ -5,4 +5,7 @@ on:
 jobs:
   # 共通CIワークフローを呼び出すよ！
   ci:
-    uses: ./.github/workflows/ci.yml
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: ./.github/workflows/ci.yml

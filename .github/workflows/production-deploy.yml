@@ -5,7 +5,10 @@ on:
 jobs:
   # まずは共通CIワークフローを呼び出す！
   ci:
-    uses: ./.github/workflows/ci.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/workflows/ci.yml
 
   # CIが終わったらnpmにパブリッシュするよ！
   publish:
